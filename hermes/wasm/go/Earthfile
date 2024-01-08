@@ -1,0 +1,52 @@
+VERSION --global-cache 0.7
+
+builder:
+    FROM rust:latest
+
+    RUN apt-get update && \
+        apt-get install --no-install-recommends -y software-properties-common python3-launchpadlib
+
+    RUN add-apt-repository ppa:longsleep/golang-backports 
+    
+    RUN apt-get update && \
+        apt-get install --no-install-recommends -y \
+        ca-certificates curl file \
+        build-essential \
+        autoconf automake autotools-dev libtool xutils-dev wget golang-go && \
+        rm -rf /var/lib/apt/lists/*
+
+
+    WORKDIR /install
+
+    RUN wget https://github.com/tinygo-org/tinygo/releases/download/v0.30.0/tinygo_0.30.0_amd64.deb
+    RUN dpkg -i tinygo_0.30.0_amd64.deb
+
+    RUN cargo install --git https://github.com/bytecodealliance/wit-bindgen wit-bindgen-cli
+    RUN cargo install wasm-tools
+
+
+compile:
+    FROM +builder
+
+    WORKDIR /build
+    COPY --dir src wit go.mod .
+
+    #COPY wasi_snapshot_preview1.command.wasm wasi_snapshot_preview1.wasm
+    COPY wasi_snapshot_preview1.reactor.wasm wasi_snapshot_preview1.wasm
+    #COPY wasi_snapshot_preview1.proxy.wasm wasi_snapshot_preview1.wasm
+
+    RUN go generate -v -x src/my-component.go
+    RUN ls -al host
+    RUN cat host/host.go
+
+    RUN tinygo build -target=wasi -o main.wasm src/my-component.go # compile
+    RUN wasm-tools component embed --world host ./wit main.wasm -o main.embed.wasm # create a component
+    RUN wasm-tools component new main.embed.wasm --adapt wasi_snapshot_preview1.wasm -o main.component.wasm
+    RUN wasm-tools validate main.component.wasm --features component-model    
+    RUN --no-cache ls -al
+    RUN wasm-tools print main.wasm | grep '(import'
+    RUN wasm-tools print main.embed.wasm | grep '(import'   
+    RUN wasm-tools print main.component.wasm | grep '(import'
+
+    SAVE ARTIFACT main.wasm AS LOCAL .
+    SAVE ARTIFACT main.component.wasm AS LOCAL .

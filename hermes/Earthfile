@@ -21,19 +21,20 @@ alpine-3-19-fail:
     # Install necessary packages
     RUN apk add --no-cache \
             musl-dev \
+            clang \
+            mold \
             gdb
 
     COPY --dir .cargo .config crates bin .
     COPY Cargo.toml .
     COPY clippy.toml deny.toml rustfmt.toml .
 
-    RUN mkdir /wasm
     COPY --dir ../wasm+wasi-src/wasi /wasm/wasi
     # Compiled WASM component for benchmarks
-    COPY ../wasm/c+build/component.wasm /wasm/c/bench_component.wasm
+    COPY ./bench_component.wasm /wasm/c/bench_component.wasm
 
     # Run benchmarks
-    RUN cargo bench --features bench
+    RUN cargo bench -p hermes --features bench
 
 alpine-3-18-pass:
     FROM rust:1.75-alpine3.18
@@ -41,6 +42,8 @@ alpine-3-18-pass:
     # Install necessary packages
     RUN apk add --no-cache \
             musl-dev \
+            clang \
+            mold \
             gdb
 
     COPY --dir .cargo .config crates bin .
@@ -50,10 +53,10 @@ alpine-3-18-pass:
     RUN mkdir /wasm
     COPY --dir ../wasm+wasi-src/wasi /wasm/wasi
     # Compiled WASM component for benchmarks
-    COPY ../wasm/c+build/component.wasm /wasm/c/bench_component.wasm
+    COPY ./bench_component.wasm /wasm/c/bench_component.wasm
 
     # Run benchmarks
-    RUN cargo bench --features bench
+    RUN cargo bench -p hermes --features bench
 
 
 # Expands `wasmtime::bindgen!` macro into the `bindings.rs` file

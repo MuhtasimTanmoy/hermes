@@ -15,6 +15,47 @@ builder:
     # Compiled WASM component for benchmarks
     COPY ../wasm/c+build/component.wasm /wasm/c/bench_component.wasm
 
+alpine-3-19-fail:
+    FROM rust:1.75-alpine3.19
+    
+    # Install necessary packages
+    RUN apk add --no-cache \
+            musl-dev \
+            gdb
+
+    COPY --dir .cargo .config crates bin .
+    COPY Cargo.toml .
+    COPY clippy.toml deny.toml rustfmt.toml .
+
+    RUN mkdir /wasm
+    COPY --dir ../wasm+wasi-src/wasi /wasm/wasi
+    # Compiled WASM component for benchmarks
+    COPY ../wasm/c+build/component.wasm /wasm/c/bench_component.wasm
+
+    # Run benchmarks
+    RUN cargo bench --features bench
+
+alpine-3-18-pass:
+    FROM rust:1.75-alpine3.18
+    
+    # Install necessary packages
+    RUN apk add --no-cache \
+            musl-dev \
+            gdb
+
+    COPY --dir .cargo .config crates bin .
+    COPY Cargo.toml .
+    COPY clippy.toml deny.toml rustfmt.toml .
+
+    RUN mkdir /wasm
+    COPY --dir ../wasm+wasi-src/wasi /wasm/wasi
+    # Compiled WASM component for benchmarks
+    COPY ../wasm/c+build/component.wasm /wasm/c/bench_component.wasm
+
+    # Run benchmarks
+    RUN cargo bench --features bench
+
+
 # Expands `wasmtime::bindgen!` macro into the `bindings.rs` file
 bindings-expand:
     FROM +builder

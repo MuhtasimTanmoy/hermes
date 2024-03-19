@@ -40,9 +40,11 @@ impl Host for HermesRuntimeContext {
         &mut self, net: CardanoBlockchainId, whence: Slot,
     ) -> wasmtime::Result<Result<u64, FetchError>> {
         let sub_type = match whence {
-            Slot::Genesis => super::SubscriptionType::Blocks(
-                cardano_chain_follower::PointOrTip::Point(cardano_chain_follower::Point::Origin),
-            ),
+            Slot::Genesis => {
+                super::SubscriptionType::Blocks(cardano_chain_follower::PointOrTip::Point(
+                    cardano_chain_follower::Point::Origin,
+                ))
+            },
             Slot::Point((slot, hash)) => {
                 super::SubscriptionType::Blocks(cardano_chain_follower::PointOrTip::Point(
                     cardano_chain_follower::Point::Specific(slot, hash),

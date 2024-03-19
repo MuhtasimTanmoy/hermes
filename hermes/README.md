@@ -25,7 +25,7 @@ CARGO_FEATURE_STD=1 cargo b
 Before running benchmarks need to compile a simple WASM module:
 
 ```shell
-earthly ./wasm/c+save-local
+earthly ./wasm/c/stub+build-local
 ```
 
 And then you can run benchmarks:

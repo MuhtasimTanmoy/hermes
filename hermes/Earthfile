@@ -12,7 +12,7 @@ builder:
     RUN mkdir /wasm
     COPY --dir ../wasm+wasi-src/wasi /wasm/wasi
     # Compiled WASM component for benchmarks
-    COPY ../wasm/c+build/component.wasm /wasm/c/bench_component.wasm
+    COPY ../wasm/c/stub+build/component.wasm /wasm/c/stub/component.wasm
 
 # Expands `wasmtime::bindgen!` macro into the `bindings.rs` file
 bindings-expand:
@@ -42,10 +42,7 @@ all-hosts-check:
 # Run build using the most efficient host tooling
 # CI Automated Entry point.
 build:
-    FROM +builder
-
-    # build wasm artifacts for testing
-    COPY (../wasm/c+build/component.wasm --c_files="integration-test.c") ../wasm/test-components/
+    FROM +builderw
 
     RUN /scripts/std_build.py   --bench_flags="--features bench" \
                                 --libs="cardano-chain-follower" \

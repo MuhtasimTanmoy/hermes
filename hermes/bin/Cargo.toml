@@ -51,6 +51,7 @@ once_cell = { workspace = true }
 tokio = { workspace = true, features = ["rt", "sync"] }
 tracing = { workspace = true }
 tracing-futures = { workspace = true }
+pallas = { workspace = true }
 
 [dev-dependencies]
 hex = { workspace = true }
